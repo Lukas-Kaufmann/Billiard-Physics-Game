@@ -35,6 +35,7 @@ public class Game {
             return;
         }
         this.state = State.AIMING;
+        this.renderer.setDrawCue(true);
         double x = e.getX();
         double y = e.getY();
 
@@ -50,6 +51,7 @@ public class Game {
         }
 
         this.state = State.ROLLING;
+        this.renderer.setDrawCue(false);
         double x = e.getX();
         double y = e.getY();
 
@@ -62,15 +64,23 @@ public class Game {
                 this.cue.getStart().y - this.cue.getEnd().y
         );
 
+        if (direction.isZero()) {
+            //raycasting throws an exception of the direction is the zero vector
+            // happens if the mouse is pressed and released without dragging
+            // would probably better to use the ball-center in that case
+            direction = new Vector2(0.00001, 0);
+        }
+
         Ray ray = new Ray(this.cue.getStart(), direction);
         ArrayList<RaycastResult> results = new ArrayList<>();
-        boolean result = this.physics.getWorld().raycast(ray, 0, false, true, results);
+        boolean result = this.physics.getWorld().raycast(ray, 1, false, true, results);
 
         if(result) {
+            Vector2 finalDirection = direction;
             results.stream()
                     .filter(b -> b.getBody().getUserData() instanceof Ball)
                     .findFirst()
-                    .ifPresent(ball -> ball.getBody().applyForce(direction.multiply(400)));
+                    .ifPresent(ball -> ball.getBody().applyForce(finalDirection.multiply(400)));
         }
 
         this.state = State.WAITING_FOR_INPUT;
@@ -124,8 +134,8 @@ public class Game {
         for (Ball b : Ball.values()) {
             if (b == Ball.WHITE)
                 continue;
-
             balls.add(b);
+            physics.getWorld().addBody(b.getBody());
         }
        
         this.placeBalls(balls);
