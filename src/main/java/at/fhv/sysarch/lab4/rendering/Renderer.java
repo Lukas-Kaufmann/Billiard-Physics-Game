@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import at.fhv.sysarch.lab4.game.Cue;
+import at.fhv.sysarch.lab4.physics.Physics;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Circle;
 import org.dyn4j.geometry.Polygon;
@@ -48,8 +50,26 @@ public class Renderer extends AnimationTimer {
 
     private Optional<FrameListener> frameListener;
 
-    public Renderer(final GraphicsContext gc, 
-        int sceneWidth, int sceneHeight) {
+    private Physics physics;
+    private Cue cue;
+
+    public void setCue(Cue cue) {
+        this.cue = cue;
+    }
+
+    private boolean drawCue = false;
+
+    public boolean isDrawCue() {
+        return drawCue;
+    }
+
+    public void setDrawCue(boolean drawCue) {
+        this.drawCue = drawCue;
+    }
+
+    public Renderer(final GraphicsContext gc,
+                    int sceneWidth, int sceneHeight, Physics physics) {
+
         this.gc = gc;
 
         this.balls = new ArrayList<>();
@@ -72,6 +92,8 @@ public class Renderer extends AnimationTimer {
         this.jfxCoords = new Affine();
 
         this.gc.setStroke(Color.WHITE);
+
+        this.physics = physics;
     }
 
     public void setStrikeMessage(String strikeMessage) {
@@ -134,9 +156,11 @@ public class Renderer extends AnimationTimer {
 
     @Override
     public void handle(long now) {
-        double dt = (double) (now - lastUpdate) / 1000_000_000.0;
+        double dt = (now - lastUpdate) / 1000_000_000.0;
 
         this.frameListener.ifPresent(l -> l.onFrame(dt));
+
+        this.physics.getWorld().update(dt);
 
         this.clearWithColorBackground();
         this.drawTable();
@@ -229,6 +253,7 @@ public class Renderer extends AnimationTimer {
 
     private void drawCue() {
         // TODO: draw cue
+        this.gc.strokeLine(this.cue.getStart().x, this.cue.getStart().y, this.cue.getEnd().x, this.cue.getEnd().y);
     }
 
     private void drawFPS(double dt) {

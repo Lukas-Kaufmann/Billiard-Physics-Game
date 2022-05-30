@@ -4,34 +4,89 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import at.fhv.sysarch.lab4.physics.Physics;
 import at.fhv.sysarch.lab4.rendering.Renderer;
 import javafx.scene.input.MouseEvent;
+import org.dyn4j.dynamics.RaycastResult;
+import org.dyn4j.geometry.Ray;
+import org.dyn4j.geometry.Vector2;
 
 public class Game {
-    private final Renderer renderer;
+    private enum State {
+        WAITING_FOR_INPUT,
+        AIMING,
+        ROLLING
+    }
 
-    public Game(Renderer renderer) {      
+    private State state = State.WAITING_FOR_INPUT;
+
+    private final Renderer renderer;
+    private final Physics physics;
+    private Cue cue = new Cue();
+
+    public Game(Renderer renderer, Physics physics) {
         this.renderer = renderer;
+        this.physics = physics;
         this.initWorld();
     }
 
     public void onMousePressed(MouseEvent e) {
+        if (this.state != State.WAITING_FOR_INPUT) {
+            return;
+        }
+        this.state = State.AIMING;
         double x = e.getX();
         double y = e.getY();
 
         double pX = this.renderer.screenToPhysicsX(x);
         double pY = this.renderer.screenToPhysicsY(y);
+
+        this.cue.setStart(new Vector2(pX, pY));
     }
 
     public void onMouseReleased(MouseEvent e) {
+        if (this.state != State.AIMING) {
+            return;
+        }
+
+        this.state = State.ROLLING;
+        double x = e.getX();
+        double y = e.getY();
+
+        double pX = this.renderer.screenToPhysicsX(x);
+        double pY = this.renderer.screenToPhysicsY(y);
+        this.cue.setEnd(new Vector2(pX, pY));
+
+        Vector2 direction = new Vector2(
+                this.cue.getStart().x - this.cue.getEnd().x,
+                this.cue.getStart().y - this.cue.getEnd().y
+        );
+
+        Ray ray = new Ray(this.cue.getStart(), direction);
+        ArrayList<RaycastResult> results = new ArrayList<>();
+        boolean result = this.physics.getWorld().raycast(ray, 0, false, true, results);
+
+        if(result) {
+            results.stream()
+                    .filter(b -> b.getBody().getUserData() instanceof Ball)
+                    .findFirst()
+                    .ifPresent(ball -> ball.getBody().applyForce(direction.multiply(400)));
+        }
+
+        this.state = State.WAITING_FOR_INPUT;
     }
 
     public void setOnMouseDragged(MouseEvent e) {
+        if (this.state != State.AIMING) {
+            return;
+        }
         double x = e.getX();
         double y = e.getY();
 
         double pX = renderer.screenToPhysicsX(x);
         double pY = renderer.screenToPhysicsY(y);
+
+        this.cue.setEnd(new Vector2(pX, pY));
     }
 
     private void placeBalls(List<Ball> balls) {
@@ -76,10 +131,13 @@ public class Game {
         this.placeBalls(balls);
 
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
-        
+        physics.getWorld().addBody(Ball.WHITE.getBody());
         renderer.addBall(Ball.WHITE);
+
+        this.renderer.setCue(this.cue);
         
         Table table = new Table();
+        physics.getWorld().addBody(table.getBody());
         renderer.setTable(table);
     }
 }
