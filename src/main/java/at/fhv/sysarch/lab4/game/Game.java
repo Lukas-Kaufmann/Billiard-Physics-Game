@@ -27,11 +27,13 @@ public class Game {
     public Game(Renderer renderer, Physics physics) {
         this.renderer = renderer;
         this.physics = physics;
+        this.physics.setGame(this);
         this.initWorld();
     }
 
     public void onMousePressed(MouseEvent e) {
         if (this.state != State.WAITING_FOR_INPUT) {
+            System.out.println("No-op mouseclick");
             return;
         }
         this.state = State.AIMING;
@@ -82,8 +84,6 @@ public class Game {
                     .findFirst()
                     .ifPresent(ball -> ball.getBody().applyForce(finalDirection.multiply(400)));
         }
-
-        this.state = State.WAITING_FOR_INPUT;
     }
 
     public void setOnMouseDragged(MouseEvent e) {
@@ -149,5 +149,11 @@ public class Game {
         Table table = new Table();
         physics.getWorld().addBody(table.getBody());
         renderer.setTable(table);
+    }
+
+    public void ballsStopped() {
+        if (this.state == State.ROLLING) {
+            this.state = State.WAITING_FOR_INPUT;
+        }
     }
 }
