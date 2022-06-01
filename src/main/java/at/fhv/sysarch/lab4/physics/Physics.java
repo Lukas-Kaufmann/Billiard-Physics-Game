@@ -1,7 +1,6 @@
 package at.fhv.sysarch.lab4.physics;
 
 import at.fhv.sysarch.lab4.game.Ball;
-import at.fhv.sysarch.lab4.game.Game;
 import org.dyn4j.dynamics.Step;
 import org.dyn4j.dynamics.StepListener;
 import org.dyn4j.dynamics.World;
@@ -10,10 +9,15 @@ import org.dyn4j.dynamics.contact.ContactPoint;
 import org.dyn4j.dynamics.contact.PersistedContactPoint;
 import org.dyn4j.dynamics.contact.SolvedContactPoint;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class Physics implements ContactListener, StepListener {
 
     private World world;
-    private Game game; //TODO remove circular dependency, use some sort of eventListener
+    private boolean ballsMoving = true;
+
+    private List<Ball> ballsPocketed = new LinkedList<>();
 
     public Physics() {
         this.world = new World();
@@ -21,14 +25,16 @@ public class Physics implements ContactListener, StepListener {
         this.world.addListener(this);
     }
 
-    @Override
-    public void begin(Step step, World world) {
-        boolean ballsRolling = world.getBodies().stream().anyMatch(body -> !body.getLinearVelocity().isZero());
-        if (!ballsRolling) {
-            this.game.ballsStopped();
-        }
+    public List<Ball> getBallsPocketed() {
+        List<Ball> temp = this.ballsPocketed;
+        this.ballsPocketed = new LinkedList<>();
+        return temp;
     }
 
+    @Override
+    public void begin(Step step, World world) {
+        this.ballsMoving =  !world.getBodies().stream().anyMatch(body -> !body.getLinearVelocity().isZero());
+    }
 
     @Override
     public boolean persist(PersistedContactPoint point) {
@@ -40,8 +46,7 @@ public class Physics implements ContactListener, StepListener {
             } else {
                 ball = (Ball) point.getBody2().getUserData();
             }
-            game.ballPocketed(ball);
-            world.removeBody(ball.getBody());
+            this.ballsPocketed.add(ball);
         }
         return true;
     }
@@ -50,8 +55,8 @@ public class Physics implements ContactListener, StepListener {
         return world;
     }
 
-    public void setGame(Game game) {
-        this.game = game;
+    public boolean areBallsMoving() {
+        return ballsMoving;
     }
 
 

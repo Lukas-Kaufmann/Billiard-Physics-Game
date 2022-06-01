@@ -8,10 +8,13 @@ import at.fhv.sysarch.lab4.physics.Physics;
 import at.fhv.sysarch.lab4.rendering.Renderer;
 import javafx.scene.input.MouseEvent;
 import org.dyn4j.dynamics.RaycastResult;
+import org.dyn4j.dynamics.Step;
+import org.dyn4j.dynamics.StepListener;
+import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
 
-public class Game {
+public class Game implements StepListener {
     private enum State {
         WAITING_FOR_INPUT,
         AIMING,
@@ -20,6 +23,11 @@ public class Game {
 
     private State state = State.WAITING_FOR_INPUT;
 
+    private boolean player1Turn = true;
+
+    private int player1Score = 0;
+    private int player2Score = 0;
+
     private final Renderer renderer;
     private final Physics physics;
     private Cue cue = new Cue();
@@ -27,17 +35,10 @@ public class Game {
     public Game(Renderer renderer, Physics physics) {
         this.renderer = renderer;
         this.physics = physics;
-        this.physics.setGame(this);
         this.initWorld();
     }
     //handling user input
     public void onMousePressed(MouseEvent e) {
-
-        this.renderer.setActionMessage("action");
-        this.renderer.setFoulMessage("foul");
-        this.renderer.setPlayer1Score(69);
-        this.renderer.setPlayer1Score(69);
-        this.renderer.setStrikeMessage("strike");
 
         if (this.state != State.WAITING_FOR_INPUT) {
             return;
@@ -73,7 +74,7 @@ public class Game {
         );
 
         if (direction.isZero()) {
-            //raycasting throws an exception of the direction is the zero vector
+            // raycast throws an exception if the direction is the zero vector
             // happens if the mouse is pressed and released without dragging
             // would probably better to use the ball-center in that case
             direction = new Vector2(0.00001, 0);
@@ -105,16 +106,31 @@ public class Game {
         this.cue.setEnd(new Vector2(pX, pY));
     }
 
-    //handling internal game events
-    public void ballsStopped() {
+    @Override
+    public void begin(Step step, World world) {
         if (this.state == State.ROLLING) {
+            System.out.println(this.state);
+        }
+        //check if balls are rolling
+        if (this.state == State.ROLLING && this.physics.areBallsMoving()) {
+            this.player1Turn = !player1Turn;
             this.state = State.WAITING_FOR_INPUT;
         }
-    }
 
-    public void ballPocketed(Ball ball) {
-        //TODO turn state
-        renderer.removeBall(ball);
+        //handle pocketed balls
+        for (Ball b : physics.getBallsPocketed()) {
+            //TODO game event for pocketing white ball
+
+            physics.getWorld().removeBody(b.getBody());
+            renderer.removeBall(b);
+            System.out.println("Pocketed ball " + b.name());
+
+            if (player1Turn) {
+                this.renderer.setPlayer1Score(++player1Score);
+            } else {
+                this.renderer.setPlayer2Score(++player2Score);
+            }
+        }
     }
 
 
@@ -169,5 +185,20 @@ public class Game {
         Table table = new Table();
         physics.getWorld().addBody(table.getBody());
         renderer.setTable(table);
+    }
+
+    @Override
+    public void updatePerformed(Step step, World world) {
+
+    }
+
+    @Override
+    public void postSolve(Step step, World world) {
+
+    }
+
+    @Override
+    public void end(Step step, World world) {
+
     }
 }
