@@ -30,10 +30,16 @@ public class Game {
         this.physics.setGame(this);
         this.initWorld();
     }
-
+    //handling user input
     public void onMousePressed(MouseEvent e) {
+
+        this.renderer.setActionMessage("action");
+        this.renderer.setFoulMessage("foul");
+        this.renderer.setPlayer1Score(69);
+        this.renderer.setPlayer1Score(69);
+        this.renderer.setStrikeMessage("strike");
+
         if (this.state != State.WAITING_FOR_INPUT) {
-            System.out.println("No-op mouseclick");
             return;
         }
         this.state = State.AIMING;
@@ -75,12 +81,12 @@ public class Game {
 
         Ray ray = new Ray(this.cue.getStart(), direction);
         ArrayList<RaycastResult> results = new ArrayList<>();
-        boolean result = this.physics.getWorld().raycast(ray, 1, false, true, results);
+        boolean result = this.physics.getWorld().raycast(ray, 0.1, false, false, results);
 
         if(result) {
             Vector2 finalDirection = direction;
             results.stream()
-                    .filter(b -> b.getBody().getUserData() instanceof Ball)
+                    .filter(raycastResult -> raycastResult.getBody().getUserData() instanceof Ball)
                     .findFirst()
                     .ifPresent(ball -> ball.getBody().applyForce(finalDirection.multiply(400)));
         }
@@ -99,6 +105,20 @@ public class Game {
         this.cue.setEnd(new Vector2(pX, pY));
     }
 
+    //handling internal game events
+    public void ballsStopped() {
+        if (this.state == State.ROLLING) {
+            this.state = State.WAITING_FOR_INPUT;
+        }
+    }
+
+    public void ballPocketed(Ball ball) {
+        //TODO turn state
+        renderer.removeBall(ball);
+    }
+
+
+    //initialisation
     private void placeBalls(List<Ball> balls) {
         Collections.shuffle(balls);
 
@@ -149,11 +169,5 @@ public class Game {
         Table table = new Table();
         physics.getWorld().addBody(table.getBody());
         renderer.setTable(table);
-    }
-
-    public void ballsStopped() {
-        if (this.state == State.ROLLING) {
-            this.state = State.WAITING_FOR_INPUT;
-        }
     }
 }

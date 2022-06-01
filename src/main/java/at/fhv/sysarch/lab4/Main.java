@@ -25,7 +25,8 @@ public class Main extends Application {
         Renderer renderer = new Renderer(
             c.getGraphicsContext2D(),
             SCENE_WIDTH, 
-            SCENE_HEIGHT, physics);
+            SCENE_HEIGHT, physics
+        );
         
         Game game = new Game(renderer, physics);
 
