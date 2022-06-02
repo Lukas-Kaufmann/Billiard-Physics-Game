@@ -113,9 +113,8 @@ public class Game {
     }
 
     public void update() {
-        //inverting message of next action because turn-change happens when balls are stopped
         if (this.state == State.WAITING_FOR_INPUT) {
-            this.renderer.setStrikeMessage( "Next strike: Player " + (!player1Turn ? "1" : "2"));
+            this.renderer.setStrikeMessage( "Next strike: Player " + (player1Turn ? "1" : "2"));
         }
 
         //check if balls are rolling
@@ -137,7 +136,14 @@ public class Game {
             } else {
                 this.renderer.setPlayer2Score(++player2Score);
             }
+
+
+            if (physics.getWorld().getBodyCount() <= 2) { //if only the whiteball and the table remain
+                physics.getWorld().removeAllBodies();
+                this.initWorld();
+            }
         }
+
     }
 
 
@@ -172,6 +178,7 @@ public class Game {
     }
 
     private void initWorld() {
+        System.out.println("inited world");
         List<Ball> balls = new ArrayList<>();
         
         for (Ball b : Ball.values()) {
@@ -184,6 +191,7 @@ public class Game {
         this.placeBalls(balls);
 
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
+        Ball.WHITE.getBody().setLinearVelocity(0, 0);
         physics.getWorld().addBody(Ball.WHITE.getBody());
         renderer.addBall(Ball.WHITE);
         
