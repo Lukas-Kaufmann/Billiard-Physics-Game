@@ -30,7 +30,7 @@ public class Main extends Application {
         
         Game game = new Game(renderer, physics);
 
-        renderer.setGame(game);
+        renderer.setFrameListener(game);
 
         c.setOnMousePressed(game::onMousePressed);
         c.setOnMouseReleased(game::onMouseReleased);

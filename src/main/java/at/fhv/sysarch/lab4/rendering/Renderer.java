@@ -165,8 +165,6 @@ public class Renderer extends AnimationTimer {
 
     @Override
     public void handle(long now) {
-        this.game.update();
-
         double dt = (now - lastUpdate) / 1000_000_000.0;
 
         this.frameListener.ifPresent(l -> l.onFrame(dt));

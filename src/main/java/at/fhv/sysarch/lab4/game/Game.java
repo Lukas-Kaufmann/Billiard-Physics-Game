@@ -5,13 +5,14 @@ import java.util.Collections;
 import java.util.List;
 
 import at.fhv.sysarch.lab4.physics.Physics;
+import at.fhv.sysarch.lab4.rendering.FrameListener;
 import at.fhv.sysarch.lab4.rendering.Renderer;
 import javafx.scene.input.MouseEvent;
 import org.dyn4j.dynamics.RaycastResult;
 import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
 
-public class Game {
+public class Game implements FrameListener {
 
     //TODO foul for when white ball doesn't hit anything
 
@@ -125,7 +126,8 @@ public class Game {
         this.cue.setEnd(new Vector2(pX, pY));
     }
 
-    public void update() {
+    @Override
+    public void onFrame(double dt) {
         if (this.state == State.WAITING_FOR_INPUT) {
             this.renderer.setStrikeMessage( "Next strike: Player " + (player1Turn ? "1" : "2"));
         }
