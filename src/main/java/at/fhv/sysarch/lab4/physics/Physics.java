@@ -90,7 +90,6 @@ public class Physics implements ContactListener, StepListener {
     public void end(ContactPoint point) {
 
     }
-
     @Override
     public boolean preSolve(ContactPoint point) {
         return true;
@@ -100,6 +99,4 @@ public class Physics implements ContactListener, StepListener {
     public void postSolve(SolvedContactPoint point) {
 
     }
-
-
 }

@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import at.fhv.sysarch.lab4.game.Game;
 import at.fhv.sysarch.lab4.physics.Physics;
-import org.checkerframework.checker.units.qual.A;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Circle;
 import org.dyn4j.geometry.Polygon;
@@ -263,7 +262,6 @@ public class Renderer extends AnimationTimer {
     }
 
     private void drawCue() {
-        // TODO: draw cue
         if (this.drawCue) {
             this.gc.setTransform(this.jfxCoords);
 

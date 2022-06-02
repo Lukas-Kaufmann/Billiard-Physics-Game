@@ -14,8 +14,6 @@ import org.dyn4j.geometry.Vector2;
 public class Game {
     //TODO fix issue of game-state switching from rolling to waiting-to-input while balls are still rolling
 
-    //TODO let renderer call game::update each frame => stepListener can be removed
-
     //TODO refactor to seperate the game-statemachine from the input
     private enum State {
         WAITING_FOR_INPUT,
@@ -32,7 +30,7 @@ public class Game {
 
     private final Renderer renderer;
     private final Physics physics;
-    private Cue cue = new Cue();
+    private final Cue cue = new Cue();
 
     public Game(Renderer renderer, Physics physics) {
         this.renderer = renderer;
@@ -101,7 +99,6 @@ public class Game {
 
     public void setOnMouseDragged(MouseEvent e) {
         if (this.state != State.AIMING) {
-            System.out.println("aborted drag handler");
             return;
         }
         double x = e.getX();
