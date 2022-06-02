@@ -12,8 +12,6 @@ import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
 
 public class Game {
-    //TODO fix issue of game-state switching from rolling to waiting-to-input while balls are still rolling
-
     //TODO refactor to seperate the game-statemachine from the input
     private enum State {
         WAITING_FOR_INPUT,
@@ -31,6 +29,8 @@ public class Game {
     private final Renderer renderer;
     private final Physics physics;
     private final Cue cue = new Cue();
+
+    private long lastAction = System.currentTimeMillis();
 
     public Game(Renderer renderer, Physics physics) {
         this.renderer = renderer;
@@ -94,6 +94,7 @@ public class Game {
                     .ifPresent(ball -> ball.getBody().applyForce(finalDirection.multiply(400)));
 
             this.renderer.setStrikeMessage(null);
+            this.lastAction = System.currentTimeMillis();
         }
     }
 
@@ -118,7 +119,7 @@ public class Game {
         }
 
         //check if balls are rolling
-        if (this.state == State.ROLLING && this.physics.areBallsMoving()) {
+        if (this.state == State.ROLLING && this.physics.areBallsMoving() && this.lastAction < System.currentTimeMillis() - 200) {
             //TODO mechanism for when to switch player
             this.player1Turn = !player1Turn;
             this.state = State.WAITING_FOR_INPUT;
