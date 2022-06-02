@@ -12,6 +12,11 @@ import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
 
 public class Game {
+
+    //TODO foul for when white ball doesn't hit anything
+
+    //TODO universal foul method with message-parameter
+
     //TODO refactor to seperate the game-statemachine from the input
     private enum State {
         WAITING_FOR_INPUT,
@@ -39,10 +44,14 @@ public class Game {
     }
     //handling user input
     public void onMousePressed(MouseEvent e) {
-
         if (this.state != State.WAITING_FOR_INPUT) {
             return;
         }
+        //cleanup-stuff
+        this.renderer.setFoulMessage(null);
+        this.renderer.setActionMessage(null);
+
+
         this.state = State.AIMING;
         this.renderer.setDrawCue(true);
         double x = e.getX();
@@ -84,18 +93,22 @@ public class Game {
 
         Ray ray = new Ray(this.cue.getStart(), direction);
         ArrayList<RaycastResult> results = new ArrayList<>();
-        boolean result = this.physics.getWorld().raycast(ray, 0.1, false, false, results);
+        this.physics.getWorld().raycast(ray, 0.1, false, false, results);
 
-        if(result) {
-            Vector2 finalDirection = direction;
-            results.stream()
-                    .filter(raycastResult -> raycastResult.getBody().getUserData() instanceof Ball)
-                    .findFirst()
-                    .ifPresent(ball -> ball.getBody().applyForce(finalDirection.multiply(400)));
-
+        Vector2 finalDirection = direction;
+        results.stream()
+                .filter(raycastResult -> raycastResult.getBody().getUserData() instanceof Ball)
+                .findFirst().ifPresent(ball ->  {
             this.renderer.setStrikeMessage(null);
             this.lastAction = System.currentTimeMillis();
-        }
+            ball.getBody().applyForce(finalDirection.multiply(400));
+
+            //handling game logic e.g. if it was the white ball... could be extracted
+            Ball castBall = (Ball) ball.getBody().getUserData();
+            if (!castBall.isWhite()) {
+                this.foul("Hit non-white-ball");
+            }
+        });
     }
 
     public void setOnMouseDragged(MouseEvent e) {
@@ -118,32 +131,73 @@ public class Game {
         }
 
         //check if balls are rolling
-        if (this.state == State.ROLLING && this.physics.areBallsMoving() && this.lastAction < System.currentTimeMillis() - 200) {
-            //TODO mechanism for when to switch player
-            this.player1Turn = !player1Turn;
-            this.state = State.WAITING_FOR_INPUT;
+        if (this.state == State.ROLLING && !this.physics.areBallsMoving() && this.lastAction < System.currentTimeMillis() - 200) {
+            //TODO extract this to some sort of turn-complete mechanism currently if a foul occurs player is switched twice
+            this.turnComplete();
         }
 
         //handle pocketed balls
-        for (Ball b : physics.getBallsPocketed()) {
+        List<Ball> pocketedBalls = physics.getBallsPocketed();
+        if (pocketedBalls.isEmpty()) {
+            //TODO check if a turn has been completed then switch players here
+            // prolly dont need this here, check this in this::turnComplete
+        }
+
+        for (Ball b : pocketedBalls) {
             //TODO game event for pocketing white ball
+
+            if (b.isWhite()) {
+                b.setPosition(Table.Constants.WIDTH * 0.25, 0);
+                b.getBody().setLinearVelocity(0, 0);
+
+                this.foul("White ball was pocketed");
+
+                continue;
+            }
 
             physics.getWorld().removeBody(b.getBody());
             renderer.removeBall(b);
 
-            if (player1Turn) {
-                this.renderer.setPlayer1Score(++player1Score);
-            } else {
-                this.renderer.setPlayer2Score(++player2Score);
-            }
+            this.addToScore(1);
 
-
-            if (physics.getWorld().getBodyCount() <= 2) { //if only the whiteball and the table remain
+            if (physics.getWorld().getBodyCount() <= 2) { //if only the white ball and the table remain
                 physics.getWorld().removeAllBodies();
                 this.initWorld();
             }
         }
+    }
 
+    //game-state mostly here
+    private void turnComplete() {
+        //TODO also switch players if no balls where pocketed
+        this.state = State.WAITING_FOR_INPUT;
+
+        if (fouloccured) {
+            this.addToScore(-1);
+            this.switchPlayers();
+        }
+
+        this.fouloccured = false;
+    }
+
+    private boolean fouloccured = false;
+    private void foul(String foulMessage) {
+        this.renderer.setFoulMessage(foulMessage);
+        this.fouloccured = true;
+    }
+    private void switchPlayers() {
+        this.player1Turn = !this.player1Turn;
+        this.renderer.setActionMessage("Switching players");
+    }
+
+    private void addToScore(int delta) {
+        if (player1Turn) {
+            this.player1Score += delta;
+            this.renderer.setPlayer1Score(this.player1Score);
+        } else {
+            this.player2Score += delta;
+            this.renderer.setPlayer2Score(this.player2Score);
+        }
     }
 
 
@@ -178,7 +232,6 @@ public class Game {
     }
 
     private void initWorld() {
-        System.out.println("inited world");
         List<Ball> balls = new ArrayList<>();
         
         for (Ball b : Ball.values()) {

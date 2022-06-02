@@ -33,7 +33,7 @@ public class Physics implements ContactListener, StepListener {
 
     @Override
     public void begin(Step step, World world) {
-        this.ballsMoving =  !world.getBodies().stream().anyMatch(body -> !body.getLinearVelocity().isZero());
+        this.ballsMoving =  world.getBodies().stream().anyMatch(body -> !body.getLinearVelocity().isZero());
     }
 
     @Override

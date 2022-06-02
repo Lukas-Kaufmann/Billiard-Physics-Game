@@ -136,6 +136,7 @@ public class Renderer extends AnimationTimer {
         this.table = t;
     }
 
+    //TODO register the games update-method via this setter
     public void setFrameListener(FrameListener l) {
         this.frameListener = Optional.of(l);
     }
