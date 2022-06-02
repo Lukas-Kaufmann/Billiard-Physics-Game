@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import at.fhv.sysarch.lab4.game.Cue;
+import at.fhv.sysarch.lab4.game.Game;
 import at.fhv.sysarch.lab4.physics.Physics;
 import org.checkerframework.checker.units.qual.A;
 import org.dyn4j.dynamics.BodyFixture;
@@ -23,6 +23,13 @@ import javafx.scene.shape.ArcType;
 import javafx.scene.transform.Affine;
 
 public class Renderer extends AnimationTimer {
+
+    //so that the game can use the renderer-loop
+    private Game game;
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
     private long lastUpdate;
     private List<Ball> balls;
     private Table table;
@@ -52,16 +59,17 @@ public class Renderer extends AnimationTimer {
     private Optional<FrameListener> frameListener;
 
     private Physics physics;
-    private Cue cue;
-
-    public void setCue(Cue cue) {
-        this.cue = cue;
-    }
 
     private boolean drawCue = false;
 
-    public boolean isDrawCue() {
-        return drawCue;
+    private Vector2 cueStart = new Vector2();
+    private Vector2 cueEnd = new Vector2();
+
+    public void setCueStart(Vector2 cueStart) {
+        this.cueStart = cueStart;
+    }
+    public void setCueEnd(Vector2 cueEnd) {
+        this.cueEnd = cueEnd;
     }
 
     public void setDrawCue(boolean drawCue) {
@@ -157,6 +165,8 @@ public class Renderer extends AnimationTimer {
 
     @Override
     public void handle(long now) {
+        this.game.update();
+
         double dt = (now - lastUpdate) / 1000_000_000.0;
 
         this.frameListener.ifPresent(l -> l.onFrame(dt));
@@ -257,13 +267,8 @@ public class Renderer extends AnimationTimer {
         if (this.drawCue) {
             this.gc.setTransform(this.jfxCoords);
 
-            double startX = this.cue.getStart().x;
-            double startY = this.cue.getStart().y;
-            double endX = this.cue.getEnd().x;
-            double endY = this.cue.getEnd().y;
-
             this.gc.setLineWidth(6);
-            this.gc.strokeLine(startX, startY, endX, endY);
+            this.gc.strokeLine(this.cueStart.x, this.cueStart.y, this.cueEnd.x, this.cueEnd.y);
         }
     }
 

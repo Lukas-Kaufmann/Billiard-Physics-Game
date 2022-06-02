@@ -8,13 +8,15 @@ import at.fhv.sysarch.lab4.physics.Physics;
 import at.fhv.sysarch.lab4.rendering.Renderer;
 import javafx.scene.input.MouseEvent;
 import org.dyn4j.dynamics.RaycastResult;
-import org.dyn4j.dynamics.Step;
-import org.dyn4j.dynamics.StepListener;
-import org.dyn4j.dynamics.World;
 import org.dyn4j.geometry.Ray;
 import org.dyn4j.geometry.Vector2;
 
-public class Game implements StepListener {
+public class Game {
+    //TODO fix issue of game-state switching from rolling to waiting-to-input while balls are still rolling
+
+    //TODO let renderer call game::update each frame => stepListener can be removed
+
+    //TODO refactor to seperate the game-statemachine from the input
     private enum State {
         WAITING_FOR_INPUT,
         AIMING,
@@ -23,7 +25,7 @@ public class Game implements StepListener {
 
     private State state = State.WAITING_FOR_INPUT;
 
-    private boolean player1Turn = true;
+    private boolean player1Turn = false;
 
     private int player1Score = 0;
     private int player2Score = 0;
@@ -47,6 +49,8 @@ public class Game implements StepListener {
         this.renderer.setDrawCue(true);
         double x = e.getX();
         double y = e.getY();
+        this.renderer.setCueStart(new Vector2(x, y));
+        this.renderer.setCueEnd(new Vector2(x, y));
 
         double pX = this.renderer.screenToPhysicsX(x);
         double pY = this.renderer.screenToPhysicsY(y);
@@ -90,15 +94,19 @@ public class Game implements StepListener {
                     .filter(raycastResult -> raycastResult.getBody().getUserData() instanceof Ball)
                     .findFirst()
                     .ifPresent(ball -> ball.getBody().applyForce(finalDirection.multiply(400)));
+
+            this.renderer.setStrikeMessage(null);
         }
     }
 
     public void setOnMouseDragged(MouseEvent e) {
         if (this.state != State.AIMING) {
+            System.out.println("aborted drag handler");
             return;
         }
         double x = e.getX();
         double y = e.getY();
+        this.renderer.setCueEnd(new Vector2(x, y));
 
         double pX = renderer.screenToPhysicsX(x);
         double pY = renderer.screenToPhysicsY(y);
@@ -106,13 +114,15 @@ public class Game implements StepListener {
         this.cue.setEnd(new Vector2(pX, pY));
     }
 
-    @Override
-    public void begin(Step step, World world) {
-        if (this.state == State.ROLLING) {
-            System.out.println(this.state);
+    public void update() {
+        //inverting message of next action because turn-change happens when balls are stopped
+        if (this.state == State.WAITING_FOR_INPUT) {
+            this.renderer.setStrikeMessage( "Next strike: Player " + (!player1Turn ? "1" : "2"));
         }
+
         //check if balls are rolling
         if (this.state == State.ROLLING && this.physics.areBallsMoving()) {
+            //TODO mechanism for when to switch player
             this.player1Turn = !player1Turn;
             this.state = State.WAITING_FOR_INPUT;
         }
@@ -123,7 +133,6 @@ public class Game implements StepListener {
 
             physics.getWorld().removeBody(b.getBody());
             renderer.removeBall(b);
-            System.out.println("Pocketed ball " + b.name());
 
             if (player1Turn) {
                 this.renderer.setPlayer1Score(++player1Score);
@@ -179,26 +188,9 @@ public class Game implements StepListener {
         Ball.WHITE.setPosition(Table.Constants.WIDTH * 0.25, 0);
         physics.getWorld().addBody(Ball.WHITE.getBody());
         renderer.addBall(Ball.WHITE);
-
-        this.renderer.setCue(this.cue);
         
         Table table = new Table();
         physics.getWorld().addBody(table.getBody());
         renderer.setTable(table);
-    }
-
-    @Override
-    public void updatePerformed(Step step, World world) {
-
-    }
-
-    @Override
-    public void postSolve(Step step, World world) {
-
-    }
-
-    @Override
-    public void end(Step step, World world) {
-
     }
 }
