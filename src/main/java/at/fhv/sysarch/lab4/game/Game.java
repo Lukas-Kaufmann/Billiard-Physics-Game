@@ -14,11 +14,6 @@ import org.dyn4j.geometry.Vector2;
 
 public class Game implements FrameListener {
 
-    //TODO foul for when white ball doesn't hit anything
-
-    //TODO universal foul method with message-parameter
-
-    //TODO refactor to seperate the game-statemachine from the input
     private enum State {
         WAITING_FOR_INPUT,
         AIMING,
@@ -27,7 +22,9 @@ public class Game implements FrameListener {
 
     private State state = State.WAITING_FOR_INPUT;
 
-    private boolean player1Turn = false;
+    private boolean player1Turn = true;
+
+    private boolean atLeastOnePocketed = false;
 
     private int player1Score = 0;
     private int player2Score = 0;
@@ -134,20 +131,11 @@ public class Game implements FrameListener {
 
         //check if balls are rolling
         if (this.state == State.ROLLING && !this.physics.areBallsMoving() && this.lastAction < System.currentTimeMillis() - 200) {
-            //TODO extract this to some sort of turn-complete mechanism currently if a foul occurs player is switched twice
             this.turnComplete();
         }
 
         //handle pocketed balls
-        List<Ball> pocketedBalls = physics.getBallsPocketed();
-        if (pocketedBalls.isEmpty()) {
-            //TODO check if a turn has been completed then switch players here
-            // prolly dont need this here, check this in this::turnComplete
-        }
-
-        for (Ball b : pocketedBalls) {
-            //TODO game event for pocketing white ball
-
+        for (Ball b : physics.getBallsPocketed()) {
             if (b.isWhite()) {
                 b.setPosition(Table.Constants.WIDTH * 0.25, 0);
                 b.getBody().setLinearVelocity(0, 0);
@@ -156,6 +144,8 @@ public class Game implements FrameListener {
 
                 continue;
             }
+
+            this.atLeastOnePocketed = true;
 
             physics.getWorld().removeBody(b.getBody());
             renderer.removeBall(b);
@@ -171,14 +161,23 @@ public class Game implements FrameListener {
 
     //game-state mostly here
     private void turnComplete() {
-        //TODO also switch players if no balls where pocketed
         this.state = State.WAITING_FOR_INPUT;
 
-        if (fouloccured) {
-            this.addToScore(-1);
+        if (!this.physics.isWhiteBallHitOtherBall()) {
+            this.foul("White ball hit nothing");
+        }
+
+        if (!this.atLeastOnePocketed || fouloccured) {
+            if (fouloccured) {
+                this.addToScore(-1);
+            }
             this.switchPlayers();
         }
 
+
+        //cleanup
+        this.atLeastOnePocketed = false;
+        this.physics.setWhiteBallHitOtherBall(false);
         this.fouloccured = false;
     }
 

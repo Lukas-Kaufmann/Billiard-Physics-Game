@@ -17,6 +17,8 @@ public class Physics implements ContactListener, StepListener {
     private World world;
     private boolean ballsMoving = true;
 
+    private boolean whiteBallHitOtherBall = false;
+
     private List<Ball> ballsPocketed = new LinkedList<>();
 
     public Physics() {
@@ -83,6 +85,17 @@ public class Physics implements ContactListener, StepListener {
 
     @Override
     public boolean begin(ContactPoint point) {
+        Object body1 = point.getBody1().getUserData();
+        Object body2 = point.getBody2().getUserData();
+
+        if (body1 instanceof Ball && body2 instanceof Ball) {
+            Ball ball1 = (Ball) body1;
+            Ball ball2 = (Ball) body2;
+
+            if (ball1.isWhite() || ball2.isWhite()) {
+                this.whiteBallHitOtherBall = true;
+            }
+        }
         return true;
     }
 
@@ -98,5 +111,13 @@ public class Physics implements ContactListener, StepListener {
     @Override
     public void postSolve(SolvedContactPoint point) {
 
+    }
+
+    public boolean isWhiteBallHitOtherBall() {
+        return whiteBallHitOtherBall;
+    }
+
+    public void setWhiteBallHitOtherBall(boolean whiteBallHitOtherBall) {
+        this.whiteBallHitOtherBall = whiteBallHitOtherBall;
     }
 }
