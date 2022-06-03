@@ -1,6 +1,6 @@
 # Billiard Game
 
-Starten mit ``./gradlew run``
+Starten mit ``.\gradlew run``
 
 ### Funktionale Besonderheiten
 
