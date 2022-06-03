@@ -17,10 +17,10 @@ import java.util.List;
 public class Physics implements ContactListener, StepListener {
 
     private World world;
+
+    //game state
     private boolean ballsMoving = true;
-
     private boolean whiteBallHitOtherBall = false;
-
     private List<Ball> ballsPocketed = new LinkedList<>();
 
     public Physics() {
@@ -29,12 +29,7 @@ public class Physics implements ContactListener, StepListener {
         this.world.addListener(this);
     }
 
-    public List<Ball> getBallsPocketed() {
-        List<Ball> temp = this.ballsPocketed;
-        this.ballsPocketed = new LinkedList<>();
-        return temp;
-    }
-
+    //physics-loop and modifying state
     @Override
     public void begin(Step step, World world) {
         this.ballsMoving =  world.getBodies().stream().anyMatch(body -> !body.getLinearVelocity().isZero());
@@ -64,36 +59,6 @@ public class Physics implements ContactListener, StepListener {
         return true;
     }
 
-    public World getWorld() {
-        return world;
-    }
-
-    public boolean areBallsMoving() {
-        return ballsMoving;
-    }
-
-
-    //below are only empty/default implementations
-    @Override
-    public void updatePerformed(Step step, World world) {
-
-    }
-
-    @Override
-    public void postSolve(Step step, World world) {
-
-    }
-
-    @Override
-    public void end(Step step, World world) {
-
-    }
-
-    @Override
-    public void sensed(ContactPoint point) {
-
-    }
-
     @Override
     public boolean begin(ContactPoint point) {
         Object body1 = point.getBody1().getUserData();
@@ -110,20 +75,14 @@ public class Physics implements ContactListener, StepListener {
         return true;
     }
 
-    @Override
-    public void end(ContactPoint point) {
-
-    }
-    @Override
-    public boolean preSolve(ContactPoint point) {
-        return true;
+    //accessing game-state
+    public List<Ball> getBallsPocketed() {
+        List<Ball> temp = this.ballsPocketed;
+        this.ballsPocketed = new LinkedList<>();
+        return temp;
     }
 
-    @Override
-    public void postSolve(SolvedContactPoint point) {
-
-    }
-
+    //getter/setters
     public boolean isWhiteBallHitOtherBall() {
         return whiteBallHitOtherBall;
     }
@@ -131,4 +90,29 @@ public class Physics implements ContactListener, StepListener {
     public void setWhiteBallHitOtherBall(boolean whiteBallHitOtherBall) {
         this.whiteBallHitOtherBall = whiteBallHitOtherBall;
     }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public boolean areBallsMoving() {
+        return ballsMoving;
+    }
+
+
+    //below are only default/trivial implementations
+    @Override
+    public void end(ContactPoint point) {}
+    @Override
+    public boolean preSolve(ContactPoint point) {return true;}
+    @Override
+    public void postSolve(SolvedContactPoint point) {}
+    @Override
+    public void updatePerformed(Step step, World world) {}
+    @Override
+    public void postSolve(Step step, World world) {}
+    @Override
+    public void end(Step step, World world) {}
+    @Override
+    public void sensed(ContactPoint point) {}
 }

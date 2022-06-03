@@ -13,44 +13,45 @@ import java.util.Collections;
 import java.util.List;
 
 public class Game implements FrameListener {
+    private final Renderer renderer;
+    private final Physics physics;
 
-    private enum State {
+    private enum InputState {
         WAITING_FOR_INPUT,
         AIMING,
         ROLLING
     }
+    private InputState inputState = InputState.WAITING_FOR_INPUT;
 
-    private State state = State.WAITING_FOR_INPUT;
-
-    private boolean player1Turn = true;
-
-    private boolean atLeastOnePocketed = false;
-
+    //long lasting game state
+    private final Cue cue = new Cue();
     private int player1Score = 0;
     private int player2Score = 0;
+    private boolean player1Turn = true;
 
-    private final Renderer renderer;
-    private final Physics physics;
-    private final Cue cue = new Cue();
 
+    //short game state (mostly reset each turn)
+    private boolean atLeastOnePocketed = false;
     private long lastAction = System.currentTimeMillis();
+    private boolean fouloccured = false;
 
     public Game(Renderer renderer, Physics physics) {
         this.renderer = renderer;
         this.physics = physics;
         this.initWorld();
     }
+
     //handling user input
     public void onMousePressed(MouseEvent e) {
-        if (this.state != State.WAITING_FOR_INPUT) {
+        if (this.inputState != InputState.WAITING_FOR_INPUT) {
             return;
         }
-        //cleanup-stuff
+        //cleanup-previous messages
         this.renderer.setFoulMessage(null);
         this.renderer.setActionMessage(null);
 
 
-        this.state = State.AIMING;
+        this.inputState = InputState.AIMING;
         this.renderer.setDrawCue(true);
         double x = e.getX();
         double y = e.getY();
@@ -64,11 +65,11 @@ public class Game implements FrameListener {
     }
 
     public void onMouseReleased(MouseEvent e) {
-        if (this.state != State.AIMING) {
+        if (this.inputState != InputState.AIMING) {
             return;
         }
 
-        this.state = State.ROLLING;
+        this.inputState = InputState.ROLLING;
 
         this.renderer.setDrawCue(false);
         double x = e.getX();
@@ -111,7 +112,7 @@ public class Game implements FrameListener {
     }
 
     public void setOnMouseDragged(MouseEvent e) {
-        if (this.state != State.AIMING) {
+        if (this.inputState != InputState.AIMING) {
             return;
         }
         double x = e.getX();
@@ -126,12 +127,12 @@ public class Game implements FrameListener {
 
     @Override
     public void onFrame(double dt) {
-        if (this.state == State.WAITING_FOR_INPUT) {
+        if (this.inputState == InputState.WAITING_FOR_INPUT) {
             this.renderer.setStrikeMessage( "Next strike: Player " + (player1Turn ? "1" : "2"));
         }
 
         //check if balls are rolling
-        if (this.state == State.ROLLING && !this.physics.areBallsMoving() && this.lastAction < System.currentTimeMillis() - 200) {
+        if (this.inputState == InputState.ROLLING && !this.physics.areBallsMoving() && this.lastAction < System.currentTimeMillis() - 200) {
             this.turnComplete();
         }
 
@@ -160,9 +161,9 @@ public class Game implements FrameListener {
         }
     }
 
-    //game-state mostly here
+    //modifying game state
     private void turnComplete() {
-        this.state = State.WAITING_FOR_INPUT;
+        this.inputState = InputState.WAITING_FOR_INPUT;
 
         if (!this.fouloccured && !this.physics.isWhiteBallHitOtherBall()) {
             this.foul("White ball hit nothing");
@@ -182,7 +183,6 @@ public class Game implements FrameListener {
         this.fouloccured = false;
     }
 
-    private boolean fouloccured = false;
     private void foul(String foulMessage) {
         this.renderer.setFoulMessage(foulMessage);
         this.fouloccured = true;

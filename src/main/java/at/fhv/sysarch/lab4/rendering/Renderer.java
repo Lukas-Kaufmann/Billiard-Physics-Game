@@ -21,8 +21,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class Renderer extends AnimationTimer {
-
-    private long lastUpdate;
     private List<Ball> balls;
     private Table table;
 
@@ -52,22 +50,11 @@ public class Renderer extends AnimationTimer {
 
     private Physics physics;
 
+    //game-state
+    private long lastUpdate;
     private boolean drawCue = false;
-
     private Vector2 cueStart = new Vector2();
     private Vector2 cueEnd = new Vector2();
-
-    public void setCueStart(Vector2 cueStart) {
-        this.cueStart = cueStart;
-    }
-    public void setCueEnd(Vector2 cueEnd) {
-        this.cueEnd = cueEnd;
-    }
-
-    public void setDrawCue(boolean drawCue) {
-        this.drawCue = drawCue;
-    }
-
     public Renderer(final GraphicsContext gc,
                     int sceneWidth, int sceneHeight, Physics physics) {
 
@@ -255,7 +242,6 @@ public class Renderer extends AnimationTimer {
     private void drawCue() {
         if (this.drawCue) {
             this.gc.setTransform(this.jfxCoords);
-
             this.gc.setLineWidth(6);
             this.gc.strokeLine(this.cueStart.x, this.cueStart.y, this.cueEnd.x, this.cueEnd.y);
         }
@@ -347,5 +333,17 @@ public class Renderer extends AnimationTimer {
         // center of phyics circle is in the center
         // javafx draws ovals from top left corner
         this.gc.fillOval(-r, -r, d, d);
+    }
+
+
+    //getter/setter for game state
+    public void setCueStart(Vector2 cueStart) {
+        this.cueStart = cueStart;
+    }
+    public void setCueEnd(Vector2 cueEnd) {
+        this.cueEnd = cueEnd;
+    }
+    public void setDrawCue(boolean drawCue) {
+        this.drawCue = drawCue;
     }
 }
