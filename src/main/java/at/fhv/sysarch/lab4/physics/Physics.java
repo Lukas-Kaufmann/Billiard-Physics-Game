@@ -1,8 +1,10 @@
 package at.fhv.sysarch.lab4.physics;
 
 import at.fhv.sysarch.lab4.game.Ball;
-import at.fhv.sysarch.lab4.game.Table;
-import org.dyn4j.dynamics.*;
+import org.dyn4j.dynamics.BodyFixture;
+import org.dyn4j.dynamics.Step;
+import org.dyn4j.dynamics.StepListener;
+import org.dyn4j.dynamics.World;
 import org.dyn4j.dynamics.contact.ContactListener;
 import org.dyn4j.dynamics.contact.ContactPoint;
 import org.dyn4j.dynamics.contact.PersistedContactPoint;

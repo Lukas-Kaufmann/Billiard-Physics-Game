@@ -1,33 +1,26 @@
 package at.fhv.sysarch.lab4.rendering;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
+import at.fhv.sysarch.lab4.game.Ball;
 import at.fhv.sysarch.lab4.game.Game;
+import at.fhv.sysarch.lab4.game.Table;
+import at.fhv.sysarch.lab4.game.Table.TablePart;
 import at.fhv.sysarch.lab4.physics.Physics;
+import javafx.animation.AnimationTimer;
+import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.ArcType;
+import javafx.scene.transform.Affine;
 import org.dyn4j.dynamics.BodyFixture;
 import org.dyn4j.geometry.Circle;
 import org.dyn4j.geometry.Polygon;
 import org.dyn4j.geometry.Transform;
 import org.dyn4j.geometry.Vector2;
 
-import at.fhv.sysarch.lab4.game.Ball;
-import at.fhv.sysarch.lab4.game.Table;
-import at.fhv.sysarch.lab4.game.Table.TablePart;
-import javafx.animation.AnimationTimer;
-import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.ArcType;
-import javafx.scene.transform.Affine;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 public class Renderer extends AnimationTimer {
-
-    //so that the game can use the renderer-loop
-    private Game game;
-    public void setGame(Game game) {
-        this.game = game;
-    }
 
     private long lastUpdate;
     private List<Ball> balls;
