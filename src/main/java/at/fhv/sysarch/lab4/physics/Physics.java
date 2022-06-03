@@ -1,13 +1,13 @@
 package at.fhv.sysarch.lab4.physics;
 
 import at.fhv.sysarch.lab4.game.Ball;
-import org.dyn4j.dynamics.Step;
-import org.dyn4j.dynamics.StepListener;
-import org.dyn4j.dynamics.World;
+import at.fhv.sysarch.lab4.game.Table;
+import org.dyn4j.dynamics.*;
 import org.dyn4j.dynamics.contact.ContactListener;
 import org.dyn4j.dynamics.contact.ContactPoint;
 import org.dyn4j.dynamics.contact.PersistedContactPoint;
 import org.dyn4j.dynamics.contact.SolvedContactPoint;
+import org.dyn4j.geometry.Vector2;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -41,14 +41,23 @@ public class Physics implements ContactListener, StepListener {
     @Override
     public boolean persist(PersistedContactPoint point) {
         if (point.isSensor()) { // => true if a pocket is in contact
-            //TODO only remove ball if center of ball is in pocket
             Ball ball;
+            BodyFixture pocket;
             if (point.getBody1().getUserData() instanceof Ball) {
                 ball = (Ball) point.getBody1().getUserData();
+                pocket = point.getFixture2();
             } else {
                 ball = (Ball) point.getBody2().getUserData();
+                pocket = point.getFixture1();
             }
-            this.ballsPocketed.add(ball);
+
+            //check if center of pocket is within the radius of ball
+            Vector2 ballPos = ball.getBody().getTransform().getTranslation();
+            Vector2 pocketPos = pocket.getShape().getCenter();
+
+            if (ballPos.distance(pocketPos) <= Ball.Constants.RADIUS) {
+                this.ballsPocketed.add(ball);
+            }
         }
         return true;
     }
