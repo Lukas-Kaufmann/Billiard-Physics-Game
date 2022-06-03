@@ -69,6 +69,7 @@ public class Game implements FrameListener {
         }
 
         this.state = State.ROLLING;
+
         this.renderer.setDrawCue(false);
         double x = e.getX();
         double y = e.getY();
@@ -163,7 +164,7 @@ public class Game implements FrameListener {
     private void turnComplete() {
         this.state = State.WAITING_FOR_INPUT;
 
-        if (!this.physics.isWhiteBallHitOtherBall()) {
+        if (!this.fouloccured && !this.physics.isWhiteBallHitOtherBall()) {
             this.foul("White ball hit nothing");
         }
 
